@@ -1,0 +1,63 @@
+{
+	"name": "schema-clean",
+	"version": "1.0.0",
+	"description": "Recursively clean objects and arrays against a template — removes unknown keys, adds missing defaults, and resets invalid types",
+	"author": "Atif C <atifcdev@gmail.com>",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/atif-c/schema-clean.git"
+	},
+	"bugs": {
+		"url": "https://github.com/atif-c/schema-clean/issues"
+	},
+	"homepage": "https://github.com/atif-c/schema-clean#readme",
+	"type": "module",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"test:coverage": "vitest run --coverage",
+		"prettier:check": "prettier --check .",
+		"prettier:write": "prettier --write .",
+		"eslint:check": "eslint .",
+		"eslint:fix": "eslint --fix .",
+		"format": "prettier --write . && eslint --fix .",
+		"type-check": "tsc --noEmit",
+		"prepublishOnly": "npm run build"
+	},
+	"keywords": [
+		"clean",
+		"sanitise",
+		"sanitize",
+		"object",
+		"array",
+		"template",
+		"recursive",
+		"validate",
+		"schema",
+		"defaults",
+		"typescript"
+	],
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@vitest/coverage-v8": "^4.0.18",
+		"eslint": "^10.0.2",
+		"prettier": "^3.8.1",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.56.1",
+		"vitest": "^4.0.18"
+	}
+}
