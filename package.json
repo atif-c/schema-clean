@@ -25,19 +25,6 @@
 	"files": [
 		"dist"
 	],
-	"scripts": {
-		"build": "tsc",
-		"test": "vitest run",
-		"test:watch": "vitest --watch",
-		"test:coverage": "vitest run --coverage",
-		"prettier:check": "prettier --check .",
-		"prettier:write": "prettier --write .",
-		"eslint:check": "eslint .",
-		"eslint:fix": "eslint --fix .",
-		"format": "prettier --write . && eslint --fix .",
-		"type-check": "tsc --noEmit",
-		"prepublishOnly": "npm run build"
-	},
 	"keywords": [
 		"clean",
 		"sanitise",
@@ -51,6 +38,18 @@
 		"defaults",
 		"typescript"
 	],
+	"scripts": {
+		"build": "tsc",
+		"test": "vitest run",
+		"test:watch": "vitest --watch",
+		"test:coverage": "vitest run --coverage",
+		"prettier:check": "prettier --check .",
+		"prettier:write": "prettier --write .",
+		"eslint:check": "eslint .",
+		"eslint:fix": "eslint --fix .",
+		"format": "prettier --write . && eslint --fix .",
+		"prepublishOnly": "bun run build"
+	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@vitest/coverage-v8": "^4.0.18",
