@@ -1,7 +1,7 @@
 # schema-clean
 
-[![GitHub Repo](https://img.shields.io/badge/GitHub-schema--clean-black?style=for-the-badge&logo=github)](https://github.com/atif-c/schema-clean)
-[![npm Package](https://img.shields.io/badge/npm-schema--clean-red?style=for-the-badge&logo=npm)](https://www.npmjs.com/package/schema-clean)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-schema--clean-blue?&logo=github)](https://github.com/atif-c/schema-clean)
+[![npm Package](https://img.shields.io/npm/v/schema-clean?logo=npm)](https://npmjs.com/package/schema-clean)
 
 A small utility for recursively enforcing objects and arrays to conform against a schema. Removes unknown keys, adds missing defaults, and resets values whose types don't match the template.
 
