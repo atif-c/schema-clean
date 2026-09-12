@@ -252,8 +252,8 @@ export const cleanArray = <U>(
  * or primitives** as the top-level input and delegates to the appropriate
  * cleaning strategy based on the template type:
  *
- * - **Array template** — cleans the input as an array (see {@link cleanObject} for
- *   the object-level logic applied to array items that are objects).
+ * - **Array template** — cleans the input as an array (see {@link cleanArray} for
+ *   array-level logic; array items that are objects are cleaned via {@link cleanObject}).
  * - **Object template** — cleans the input as an object, removing unknown keys,
  *   adding missing defaults, and recursing into nested structures.
  * - **Primitive template** — returns the input if its `typeof` matches, otherwise
