@@ -1,7 +1,7 @@
 /**
  * Type alias for plain objects (non-null, non-array objects).
  */
-type PlainObject = Record<string, unknown>;
+export type PlainObject = Record<string, unknown>;
 
 /**
  * Options for controlling cleaning behavior.
