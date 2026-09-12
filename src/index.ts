@@ -36,6 +36,20 @@ const isPlainObject = (value: unknown): value is PlainObject => {
 };
 
 /**
+ * Checks if a key is unsafe for direct assignment (prototype pollution vector).
+ *
+ * Assigning to `__proto__` via `obj[key] = value` mutates `Object.prototype`
+ * instead of creating an own property. `constructor`/`prototype` enable the
+ * same attack via longer chains.
+ *
+ * @param key - The key to check
+ * @returns `true` if the key must not be copied with plain assignment
+ */
+const isUnsafeKey = (key: string): boolean => {
+	return key === '__proto__' || key === 'constructor' || key === 'prototype';
+};
+
+/**
  * Recursively cleans an object against a template.
  *
  * For every key in the template:
@@ -72,6 +86,7 @@ export const cleanObject = <T extends PlainObject>(
 	const result = {} as T;
 
 	for (const key of Object.keys(template)) {
+		if (isUnsafeKey(key)) continue;
 		const templateValue = template[key];
 		const inputValue = object[key];
 
@@ -94,7 +109,8 @@ export const cleanObject = <T extends PlainObject>(
 
 	if (!removeExtra) {
 		for (const key of Object.keys(object)) {
-			if (!(key in template)) {
+			if (isUnsafeKey(key)) continue;
+			if (!Object.hasOwn(template, key)) {
 				(result as PlainObject)[key] = object[key];
 			}
 		}
