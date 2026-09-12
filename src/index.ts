@@ -50,6 +50,40 @@ const isUnsafeKey = (key: string): boolean => {
 };
 
 /**
+ * Deep-clones a template default so callers never receive a live
+ * reference into the template object.
+ *
+ * Without this, mutating `result.nested.x` would mutate `template.nested`
+ * for all future `clean()` calls sharing that template.
+ *
+ * Prefers `structuredClone` when available, falls back to a manual
+ * plain-object/array clone (primitives returned as-is).
+ *
+ * @param value - Template default value to clone
+ * @returns A detached copy of the value
+ */
+const cloneDefault = <T>(value: T): T => {
+	if (typeof structuredClone === 'function') {
+		try {
+			return structuredClone(value);
+		} catch {
+			// fall through to manual clone (e.g. functions/symbols)
+		}
+	}
+	if (Array.isArray(value)) {
+		return value.map(item => cloneDefault(item)) as T;
+	}
+	if (isPlainObject(value)) {
+		const out: PlainObject = {};
+		for (const key of Object.keys(value)) {
+			out[key] = cloneDefault((value as PlainObject)[key]);
+		}
+		return out as T;
+	}
+	return value;
+};
+
+/**
  * Recursively cleans an object against a template.
  *
  * For every key in the template:
@@ -93,17 +127,17 @@ export const cleanObject = <T extends PlainObject>(
 		if (isPlainObject(templateValue)) {
 			const cleaned = isPlainObject(inputValue)
 				? cleanObject(inputValue, templateValue, options)
-				: templateValue;
+				: cloneDefault(templateValue);
 			(result as PlainObject)[key] = cleaned;
 		} else if (Array.isArray(templateValue)) {
 			const cleaned = Array.isArray(inputValue)
 				? cleanArray(inputValue, templateValue, options)
-				: templateValue;
+				: cloneDefault(templateValue);
 			(result as PlainObject)[key] = cleaned;
 		} else if (typeof inputValue === typeof templateValue) {
 			(result as PlainObject)[key] = inputValue;
 		} else if (addDefaults) {
-			(result as PlainObject)[key] = templateValue;
+			(result as PlainObject)[key] = cloneDefault(templateValue);
 		}
 	}
 
@@ -163,7 +197,7 @@ export const cleanArray = <U>(
 				usedIndices.add(matchedIndex);
 				result.push(cleanArray(inputArray[matchedIndex] as unknown[], templateItem, options) as U);
 			} else if (addDefaults) {
-				result.push(templateItem as U);
+				result.push(cloneDefault(templateItem) as U);
 			}
 		} else if (isPlainObject(templateItem)) {
 			const templateKeys = new Set(Object.keys(templateItem));
@@ -180,7 +214,7 @@ export const cleanArray = <U>(
 					cleanObject(inputArray[matchedIndex] as PlainObject, templateItem, options) as U
 				);
 			} else if (addDefaults) {
-				result.push(templateItem as U);
+				result.push(cloneDefault(templateItem) as U);
 			}
 		} else {
 			const inputIndex = result.length;
@@ -189,7 +223,7 @@ export const cleanArray = <U>(
 				usedIndices.add(inputIndex);
 				result.push(inputItem as U);
 			} else if (addDefaults) {
-				result.push(templateItem as U);
+				result.push(cloneDefault(templateItem) as U);
 			}
 		}
 	}
@@ -282,14 +316,18 @@ export const cleanArray = <U>(
 export const clean = <T>(input: unknown, template: T, options?: CleanOptions): T => {
 	// Template is an array
 	if (Array.isArray(template)) {
-		return Array.isArray(input) ? (cleanArray(input, template, options) as T) : template;
+		return Array.isArray(input)
+			? (cleanArray(input, template, options) as T)
+			: cloneDefault(template);
 	}
 
 	// Template is a plain object
 	if (isPlainObject(template)) {
-		return isPlainObject(input) ? (cleanObject(input, template, options) as T) : template;
+		return isPlainObject(input)
+			? (cleanObject(input, template, options) as T)
+			: cloneDefault(template);
 	}
 
 	// Primitive template
-	return typeof input === typeof template ? (input as T) : template;
+	return typeof input === typeof template ? (input as T) : cloneDefault(template);
 };
