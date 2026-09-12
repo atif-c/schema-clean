@@ -125,15 +125,21 @@ export const cleanObject = <T extends PlainObject>(
 		const inputValue = object[key];
 
 		if (isPlainObject(templateValue)) {
-			const cleaned = isPlainObject(inputValue)
-				? cleanObject(inputValue, templateValue, options)
-				: cloneDefault(templateValue);
-			(result as PlainObject)[key] = cleaned;
+			if (!isPlainObject(inputValue)) {
+				if (addDefaults) {
+					(result as PlainObject)[key] = cloneDefault(templateValue);
+				}
+				continue;
+			}
+			(result as PlainObject)[key] = cleanObject(inputValue, templateValue, options);
 		} else if (Array.isArray(templateValue)) {
-			const cleaned = Array.isArray(inputValue)
-				? cleanArray(inputValue, templateValue, options)
-				: cloneDefault(templateValue);
-			(result as PlainObject)[key] = cleaned;
+			if (!Array.isArray(inputValue)) {
+				if (addDefaults) {
+					(result as PlainObject)[key] = cloneDefault(templateValue);
+				}
+				continue;
+			}
+			(result as PlainObject)[key] = cleanArray(inputValue, templateValue, options);
 		} else if (typeof inputValue === typeof templateValue) {
 			(result as PlainObject)[key] = inputValue;
 		} else if (addDefaults) {
