@@ -167,10 +167,12 @@ export const cleanObject = <T extends PlainObject>(
  *   The first input object that shares at least one key with the template object is used.
  * - **Arrays** in the input are matched to template arrays by type (first unmatched
  *   input array is paired with the current template array).
- * - **Primitives** are matched positionally (by index in the result so far) and
+ * - **Primitives** are matched positionally (by template index) and
  *   accepted only if their `typeof` matches the template item.
  *
  * Unmatched template items fall back to their template defaults.
+ *
+ * Complexity: O(I·K + T·K) total — inputs are indexed once by key.
  *
  * @param inputArray - The array to clean
  * @param templateArray - Template array defining the expected shape and defaults
@@ -187,17 +189,54 @@ export const cleanArray = <U>(
 	if (templateArray.length === 0) return [];
 	const result: U[] = [];
 	const usedIndices = new Set<number>();
-	const inputKeysCache = inputArray.map(item =>
-		isPlainObject(item) ? new Set(Object.keys(item)) : null
-	);
+
+	// Index inputs once: key -> input indices holding it.
+	const keyToIndices = new Map<string, number[]>();
+	const arrayIndices: number[] = [];
+	for (let idx = 0; idx < inputArray.length; idx++) {
+		const item = inputArray[idx];
+		if (Array.isArray(item)) {
+			arrayIndices.push(idx);
+		} else if (isPlainObject(item)) {
+			for (const key of Object.keys(item)) {
+				const list = keyToIndices.get(key);
+				if (list) {
+					list.push(idx);
+				} else {
+					keyToIndices.set(key, [idx]);
+				}
+			}
+		}
+	}
+	const keyCursors = new Map<string, number>();
+	let arrayCursor = 0;
+
+	// Peek at the smallest unused input index containing `key`.
+	const peekKeyHead = (key: string): number => {
+		const list = keyToIndices.get(key);
+		if (!list) return Infinity;
+		let cursor = keyCursors.get(key) ?? 0;
+		while (cursor < list.length && usedIndices.has(list[cursor] as number)) {
+			cursor++;
+		}
+		keyCursors.set(key, cursor);
+		return cursor < list.length ? (list[cursor] as number) : Infinity;
+	};
+
+	const takeNextArrayIndex = (): number => {
+		while (arrayCursor < arrayIndices.length) {
+			const candidate = arrayIndices[arrayCursor] as number;
+			arrayCursor++;
+			if (!usedIndices.has(candidate)) return candidate;
+		}
+		return -1;
+	};
 
 	for (let i = 0; i < templateArray.length; i++) {
 		const templateItem = templateArray[i];
 
 		if (Array.isArray(templateItem)) {
-			const matchedIndex = inputArray.findIndex(
-				(item, index) => !usedIndices.has(index) && Array.isArray(item)
-			);
+			const matchedIndex = takeNextArrayIndex();
 
 			if (matchedIndex !== -1) {
 				usedIndices.add(matchedIndex);
@@ -206,13 +245,20 @@ export const cleanArray = <U>(
 				result.push(cloneDefault(templateItem) as U);
 			}
 		} else if (isPlainObject(templateItem)) {
-			const templateKeys = new Set(Object.keys(templateItem));
+			const templateKeys = Object.keys(templateItem);
+			let matchedIndex = -1;
 
-			const matchedIndex = inputArray.findIndex((_, index) => {
-				if (usedIndices.has(index)) return false;
-				const keys = inputKeysCache[index];
-				return keys !== null && [...keys].some(key => templateKeys.has(key));
-			});
+			if (templateKeys.length > 0) {
+				let best = Infinity;
+				for (const key of templateKeys) {
+					const candidate = peekKeyHead(key);
+					if (candidate < best) {
+						best = candidate;
+						if (best === 0) break;
+					}
+				}
+				if (best !== Infinity) matchedIndex = best;
+			}
 
 			if (matchedIndex !== -1) {
 				usedIndices.add(matchedIndex);
@@ -223,9 +269,10 @@ export const cleanArray = <U>(
 				result.push(cloneDefault(templateItem) as U);
 			}
 		} else {
-			const inputIndex = result.length;
-			const inputItem = inputArray[inputIndex];
-			if (typeof inputItem === typeof templateItem) {
+			// Positional by template index; never reuse a consumed slot.
+			const inputIndex = i;
+			const inputItem = inputIndex < inputArray.length ? inputArray[inputIndex] : undefined;
+			if (!usedIndices.has(inputIndex) && typeof inputItem === typeof templateItem) {
 				usedIndices.add(inputIndex);
 				result.push(inputItem as U);
 			} else if (addDefaults) {
