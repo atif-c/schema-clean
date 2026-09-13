@@ -1,6 +1,6 @@
 {
 	"name": "schema-clean",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Recursively clean objects and arrays against a template — removes unknown keys, adds missing defaults, and resets invalid types",
 	"author": "Atif C <atifcdev@gmail.com>",
 	"license": "MIT",
