@@ -211,6 +211,8 @@ When cleaning arrays, items are matched based on type:
 
 Unmatched template items use their template defaults (unless `addDefaults: false`).
 
+Matching is O(I·K + T·K) total.
+
 ## License
 
 MIT
