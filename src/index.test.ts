@@ -306,7 +306,7 @@ describe('schema-clean', () => {
 
 			expect(result).toEqual({ name: 'Atif', nested: { value: 1 } });
 			expect(result).not.toBe(input);
-			expect((result as Record<string, unknown>).nested).not.toBe(input.nested);
+			expect((result as PlainObject).nested).not.toBe(input.nested);
 		});
 
 		describe('with CleanOptions', () => {
@@ -849,10 +849,8 @@ describe('schema-clean', () => {
 
 			// Verify extra keys are gone
 			expect(result).not.toHaveProperty('extraTop');
-			expect(result.meta as Record<string, unknown>).not.toHaveProperty('extraMeta');
-			expect(
-				(result.meta as Record<string, unknown>).nested as Record<string, unknown>
-			).not.toHaveProperty('extraNested');
+			expect(result.meta as PlainObject).not.toHaveProperty('extraMeta');
+			expect((result.meta as PlainObject).nested as PlainObject).not.toHaveProperty('extraNested');
 		});
 
 		it('handles NaN in input object', () => {
@@ -933,8 +931,8 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual({ a: 1 });
 			expect(Object.hasOwn(resultCleanObject, '__proto__')).toBe(false);
 			expect(Object.hasOwn(resultClean, '__proto__')).toBe(false);
-			expect(({} as Record<string, unknown>).polluted).toBeUndefined();
-			expect((Object.prototype as Record<string, unknown>).polluted).toBeUndefined();
+			expect(({} as PlainObject).polluted).toBeUndefined();
+			expect((Object.prototype as PlainObject).polluted).toBeUndefined();
 		});
 
 		it('does not pollute via clean() passthrough with __proto__ input', () => {
@@ -945,7 +943,7 @@ describe('schema-clean', () => {
 
 			expect(result).toEqual({ a: 1 });
 			expect(Object.hasOwn(result, '__proto__')).toBe(false);
-			expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+			expect(({} as PlainObject).polluted).toBeUndefined();
 		});
 
 		it('skips constructor/prototype keys in input with removeExtra:false', () => {
@@ -961,7 +959,7 @@ describe('schema-clean', () => {
 			expect(Object.hasOwn(resultCleanObject, 'prototype')).toBe(false);
 			expect(Object.hasOwn(resultClean, 'constructor')).toBe(false);
 			expect(Object.hasOwn(resultClean, 'prototype')).toBe(false);
-			expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+			expect(({} as PlainObject).polluted).toBeUndefined();
 		});
 
 		it('skips malicious __proto__ keys in template', () => {
@@ -975,7 +973,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual({ a: 1 });
 			expect(Object.hasOwn(resultCleanObject, '__proto__')).toBe(false);
 			expect(Object.hasOwn(resultClean, '__proto__')).toBe(false);
-			expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+			expect(({} as PlainObject).polluted).toBeUndefined();
 		});
 
 		it('uses Object.hasOwn (not `in`) for extra-key checks', () => {
@@ -1006,8 +1004,8 @@ describe('schema-clean', () => {
 
 			expect(resultCleanObject).toEqual({ nested: { x: 0 } });
 			expect(resultClean).toEqual({ nested: { x: 0 } });
-			expect(({} as Record<string, unknown>).p).toBeUndefined();
-			expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+			expect(({} as PlainObject).p).toBeUndefined();
+			expect(({} as PlainObject).polluted).toBeUndefined();
 		});
 	});
 
@@ -1107,7 +1105,7 @@ describe('schema-clean', () => {
 			// structuredClone throws on functions, so the manual path
 			// returns the same fn ref by design.
 			const fn = () => 1;
-			const template: Record<string, unknown> = { fn };
+			const template: PlainObject = { fn };
 
 			const result = clean({}, template);
 
@@ -1332,7 +1330,7 @@ describe('schema-clean', () => {
 		// shows up as a failure to update.
 
 		it('pins current behavior for circular input with a finite template', () => {
-			const input: Record<string, unknown> = {};
+			const input: PlainObject = {};
 			input.self = input;
 
 			const result = clean(input, { self: { x: 0 } });
@@ -1342,9 +1340,9 @@ describe('schema-clean', () => {
 		it.todo('does not hang/crash on circular input (WeakMap/maxDepth)');
 
 		it('throws RangeError for circular template (stack overflow)', () => {
-			const input: Record<string, unknown> = {};
+			const input: PlainObject = {};
 			input.self = input;
-			const template: Record<string, unknown> = {};
+			const template: PlainObject = {};
 			template.self = template;
 
 			expect(() => clean(input, template)).toThrow(RangeError);
@@ -1409,12 +1407,12 @@ describe('schema-clean', () => {
 			if (typeof value !== 'object' || value === null || Object.isFrozen(value)) return;
 			Object.freeze(value);
 			for (const key of Object.keys(value)) {
-				deepFreeze((value as Record<string, unknown>)[key]);
+				deepFreeze((value as PlainObject)[key]);
 			}
 		};
 
 		it('is idempotent for JSON shapes', () => {
-			const cases: Array<[unknown, Record<string, unknown> | unknown[]]> = [
+			const cases: Array<[unknown, PlainObject | unknown[]]> = [
 				[
 					{ a: 1, b: 'x', extra: 1 },
 					{ a: 0, b: '' }

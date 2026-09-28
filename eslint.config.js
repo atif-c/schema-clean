@@ -5,7 +5,11 @@ export default [
 	eslint.configs.recommended,
 	...tseslint.configs.recommended,
 	{
-		rules: { '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }] }
+		rules: {
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+			'@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+			'@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }]
+		}
 	},
 	{
 		ignores: ['dist/', 'node_modules/', 'coverage/']
