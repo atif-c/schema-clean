@@ -92,7 +92,8 @@ clean({ name: 'Atif' }, [0, 0, 0]);
 The third parameter controls cleaning behavior:
 
 ```typescript
-import { clean, cleanArray, cleanObject, CleanOptions } from 'schema-clean';
+import { clean, cleanArray, cleanObject } from 'schema-clean';
+import type { CleanOptions } from 'schema-clean';
 ```
 
 #### `removeExtra` - Keep extra keys/items
