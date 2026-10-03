@@ -8,13 +8,13 @@ export type PlainObject = Record<string, unknown>;
  */
 export interface CleanOptions {
 	/**
-	 * Remove keys/items from input that are not in the template.
+	 * Removes extra keys and items.
 	 * @default true
 	 */
 	removeExtra?: boolean;
 
 	/**
-	 * Add missing keys/items from the template to the result.
+	 * Adds missing keys and items from template defaults.
 	 * @default true
 	 */
 	addDefaults?: boolean;
@@ -59,7 +59,7 @@ const isUnsafeKey = (key: string): boolean => {
  * Prefers `structuredClone` when available, falls back to a manual
  * plain-object/array clone (primitives returned as-is).
  *
- * @param value - Template default value to clone
+ * @param value - Template default to clone
  * @returns A detached copy of the value
  */
 const cloneDefault = <T>(value: T): T => {
@@ -67,7 +67,7 @@ const cloneDefault = <T>(value: T): T => {
 		try {
 			return structuredClone(value);
 		} catch {
-			// fall through to manual clone (e.g. functions/symbols)
+			// Falls through to manual clone for functions and symbols.
 		}
 	}
 	if (Array.isArray(value)) {
@@ -84,20 +84,20 @@ const cloneDefault = <T>(value: T): T => {
 };
 
 /**
- * Recursively cleans an object against a template.
+ * Cleans an object against a template.
  *
  * For every key in the template:
- * - If the key is missing from the input, the template default is used (unless addDefaults is false).
- * - If the key exists but has the wrong type, the template default is used.
- * - If the value is a nested object, it is cleaned recursively.
- * - If the value is an array, it is cleaned via {@link cleanArray} logic.
- * - Extra keys in the input that are not in the template are discarded (unless removeExtra is false).
+ * - Uses the template default for a missing key, unless `addDefaults` is false.
+ * - Uses the template default on a type mismatch.
+ * - Cleans a nested object recursively.
+ * - Cleans an array with {@link cleanArray} logic.
+ * - Discards extra keys, unless `removeExtra` is false.
  *
  * @template T - The template type (must extend `PlainObject`)
  * @param object - The object to clean
- * @param template - Template defining valid keys and default values
- * @param options - Options to control cleaning behavior
- * @returns A new object matching the template structure
+ * @param template - Template defining valid keys and template defaults
+ * @param options - Optional cleaning options
+ * @returns A new object that matches the template
  *
  * @example
  * ```ts
@@ -106,9 +106,9 @@ const cloneDefault = <T>(value: T): T => {
  *   { name: '', age: 0, active: false }
  * );
  * // => { name: 'Atif', age: 0, active: false }
- * // - 'age' reset to default 0 (string !== number)
- * // - 'extra' removed (not in template)
- * // - 'active' added with default false
+ * // - 'age' uses template default 0 (string !== number)
+ * // - 'extra' removed (extra key)
+ * // - 'active' added with template default false
  * ```
  */
 export const cleanObject = <T extends PlainObject>(
@@ -160,24 +160,24 @@ export const cleanObject = <T extends PlainObject>(
 };
 
 /**
- * Recursively cleans an array against a template array.
+ * Cleans an input array against a template array.
  *
  * Matching strategy:
- * - **Objects** in the input array are matched to template objects by shared keys.
- *   The first input object that shares at least one key with the template object is used.
- * - **Arrays** in the input are matched to template arrays by type (first unmatched
- *   input array is paired with the current template array).
- * - **Primitives** are matched positionally (by template index) and
- *   accepted only if their `typeof` matches the template item.
+ * - **Objects** match template objects by shared keys.
+ *   Uses the first input object with at least one shared key.
+ * - **Arrays** match template arrays by type.
+ *   Uses the first unmatched input array.
+ * - **Primitives** match by template index.
+ *   Accepts an item only on a `typeof` match.
  *
- * Unmatched template items fall back to their template defaults.
+ * Unmatched template items use template defaults.
  *
- * Complexity: O(I·K + T·K) total — inputs are indexed once by key.
+ * Complexity: O(I·K + T·K) total. Inputs are indexed once by key.
  *
  * @param inputArray - The array to clean
- * @param templateArray - Template array defining the expected shape and defaults
- * @param options - Options to control cleaning behavior
- * @returns A new array conforming to the template
+ * @param templateArray - Template array defining the expected shape and template defaults
+ * @param options - Optional cleaning options
+ * @returns A new array that matches the template
  */
 export const cleanArray = <U>(
 	inputArray: unknown[],
@@ -293,31 +293,29 @@ export const cleanArray = <U>(
 };
 
 /**
- * Recursively cleans a value against a template.
+ * Cleans an input against a template.
  *
- * This is the primary entry point for the library. It accepts **objects, arrays,
- * or primitives** as the top-level input and delegates to the appropriate
- * cleaning strategy based on the template type:
+ * This is the primary entry point. Cleans objects, arrays, or primitives.
+ * Selects the strategy from the template type:
  *
- * - **Array template** — cleans the input as an array (see {@link cleanArray} for
- *   array-level logic; array items that are objects are cleaned via {@link cleanObject}).
- * - **Object template** — cleans the input as an object, removing unknown keys,
- *   adding missing defaults, and recursing into nested structures.
- * - **Primitive template** — returns the input if its `typeof` matches, otherwise
- *   returns the template default.
+ * - **Array template** — cleans the input as an array with {@link cleanArray}.
+ * - **Object template** — cleans the input as an object. Removes extra keys,
+ *   adds missing keys from template defaults, and cleans nested structures.
+ * - **Primitive template** — returns the input on a `typeof` match.
+ *   Otherwise returns the template default.
  *
- * If the input type does not match the template type (e.g. an array input with an
- * object template), the template default is returned as-is.
+ * Returns the template default as-is on a type mismatch.
+ * For example, an array input with an object template returns the object template default.
  *
  * @template T - The template type
- * @param input - The value to clean (object, array, or primitive)
- * @param template - Template defining the expected shape and default values
- * @param options - Optional options to control cleaning behavior
- * @returns A cleaned value conforming to the template
+ * @param input - The input to clean (object, array, or primitive)
+ * @param template - Template defining the expected shape and template defaults
+ * @param options - Optional cleaning options
+ * @returns A cleaned value that matches the template
  *
  * @example
  * ```ts
- * // Cleaning an object
+ * // Cleans an object
  * const obj = clean(
  *   { name: 'Atif', extra: true },
  *   { name: '', age: 0 }
@@ -327,26 +325,26 @@ export const cleanArray = <U>(
  *
  * @example
  * ```ts
- * // Cleaning a top-level array of objects
+ * // Cleans a top-level array of objects
  * const array = clean(
  *   [{ id: 1, extra: true }, { id: 2 }],
  *   [{ id: 0, label: '' }]
  * );
  * // => [{ id: 1, label: '' }]
- * // Only the first template item is used as the shape; input items are
- * // matched to template items by shared keys.
+ * // Uses only the first template item as the shape.
+ * // Matches input items by shared keys.
  * ```
  *
  * @example
  * ```ts
- * // Cleaning a top-level array of primitives
+ * // Cleans a top-level array of primitives
  * const nums = clean([1, 'oops', 3], [0, 0, 0]);
  * // => [1, 0, 3]
  * ```
  *
  * @example
  * ```ts
- * // With options - keep extra keys
+ * // Keeps extra keys
  * const result = clean(
  *   { name: 'Atif', extra: true },
  *   { name: '' },
@@ -357,7 +355,7 @@ export const cleanArray = <U>(
  *
  * @example
  * ```ts
- * // With options - don't add defaults
+ * // Skips template defaults
  * const result = clean(
  *   { name: 'Atif' },
  *   { name: '', age: 0 },
@@ -367,20 +365,17 @@ export const cleanArray = <U>(
  * ```
  */
 export const clean = <T>(input: unknown, template: T, options?: CleanOptions): T => {
-	// Template is an array
 	if (Array.isArray(template)) {
 		return Array.isArray(input)
 			? (cleanArray(input, template, options) as T)
 			: cloneDefault(template);
 	}
 
-	// Template is a plain object
 	if (isPlainObject(template)) {
 		return isPlainObject(input)
 			? (cleanObject(input, template, options) as T)
 			: cloneDefault(template);
 	}
 
-	// Primitive template
 	return typeof input === typeof template ? (input as T) : cloneDefault(template);
 };

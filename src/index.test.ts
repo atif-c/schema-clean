@@ -20,7 +20,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual({ name: 'Atif', age: 26, active: true });
 		});
 
-		it('replaces values with wrong types to template defaults', () => {
+		it('replaces values with type mismatches to template defaults', () => {
 			const value = { name: true, age: '26', active: 'yes' };
 			const template = { name: '', age: 0, active: false };
 
@@ -31,7 +31,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual({ name: '', age: 0, active: false });
 		});
 
-		it('removes extra keys not in template', () => {
+		it('removes extra keys', () => {
 			const value = { name: 'Atif', extra: true, another: 42 };
 			const template = { name: '' };
 
@@ -206,7 +206,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual({ grid: [[[1]]] });
 		});
 
-		it('adds default nested object when missing in input', () => {
+		it('adds template default for missing nested object', () => {
 			const input = {};
 			const template = { nested: { value: 0 } };
 
@@ -350,7 +350,7 @@ describe('schema-clean', () => {
 				expect(result).toEqual({ a: 1 });
 			});
 
-			it('works with just removeExtra option', () => {
+			it('works with only removeExtra option', () => {
 				const input = { a: 1, b: 2 };
 				const template = { a: 0 };
 
@@ -358,7 +358,7 @@ describe('schema-clean', () => {
 				expect(result).toEqual({ a: 1, b: 2 });
 			});
 
-			it('works with just addDefaults option', () => {
+			it('works with only addDefaults option', () => {
 				const input = { a: 1 };
 				const template = { a: 0, b: 0 };
 
@@ -399,7 +399,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual([1, 2, 3]);
 		});
 
-		it('replaces values with wrong types to template defaults', () => {
+		it('replaces values with type mismatches to template defaults', () => {
 			const value = [1, 'two', 3];
 			const template = [0, 0, 0];
 
@@ -560,7 +560,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual([[[1, 2]]]);
 		});
 
-		it('adds default nested array when missing in input', () => {
+		it('adds template default for missing nested array', () => {
 			const input = [{ not: 'array' }];
 			const template = [[0, 0]];
 
@@ -579,7 +579,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual([{ id: 0, name: '' }]);
 		});
 
-		it('handles null key-values in input', () => {
+		it('handles null items in input', () => {
 			const value = [null, 2, null];
 			const template = [0, 0, 0];
 
@@ -590,7 +590,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual([0, 2, 0]);
 		});
 
-		it('handles null key-values in template', () => {
+		it('handles null items in template', () => {
 			const value = [1, 2, 3];
 			const template = [0, null, 0];
 
@@ -601,7 +601,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual([1, null, 3]);
 		});
 
-		it('handles undefined values in input array', () => {
+		it('handles undefined items in input array', () => {
 			const value = [undefined, 2, undefined];
 			const template = [0, 0, 0];
 
@@ -612,7 +612,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual([0, 2, 0]);
 		});
 
-		it('handles undefined values in template array', () => {
+		it('handles undefined items in template array', () => {
 			const value = [1, 2, 3];
 			const template = [0, undefined, 0];
 
@@ -671,14 +671,14 @@ describe('schema-clean', () => {
 				expect(result).toEqual([1, 2]);
 			});
 
-			it('keeps all items and adds defaults for unmatched template items', () => {
+			it('keeps all items and adds template defaults for unmatched items', () => {
 				const input = [1, 2, 3];
 				const template = [0, 0];
 
 				const result = cleanArray(input, template, { removeExtra: false, addDefaults: true });
-				// First 2 template items match input[0], input[1]
-				// input[2] is extra and kept (removeExtra: false)
-				// No more template items to add defaults from
+				// First 2 template items match input[0], input[1].
+				// input[2] is extra and is kept (removeExtra: false).
+				// No more template items add template defaults.
 				expect(result).toEqual([1, 2, 3]);
 			});
 
@@ -706,7 +706,7 @@ describe('schema-clean', () => {
 				expect(result).toEqual([1]);
 			});
 
-			it('works with just removeExtra option', () => {
+			it('works with only removeExtra option', () => {
 				const input = [1, 2, 3];
 				const template = [0];
 
@@ -714,7 +714,7 @@ describe('schema-clean', () => {
 				expect(result).toEqual([1, 2, 3]);
 			});
 
-			it('works with just addDefaults option', () => {
+			it('works with only addDefaults option', () => {
 				const input = [1];
 				const template = [0, 0];
 
@@ -730,7 +730,7 @@ describe('schema-clean', () => {
 				const template = [{ id: 0, name: '' }];
 
 				const result = cleanArray(input, template, { removeExtra: false, addDefaults: false });
-				// First object matches template, second is extra and kept (removeExtra: false)
+				// First object matches the template. Second is extra and is kept.
 				expect(result).toEqual([
 					{ id: 1, name: 'Atif', extra: true },
 					{ id: 2, age: 26 }
@@ -768,12 +768,12 @@ describe('schema-clean', () => {
 			expect(result).toEqual({ name: '', age: 0 });
 		});
 
-		it('returns template when input is undefined and template is object', () => {
+		it('returns template when input is undefined and template is array', () => {
 			const result = clean(undefined, [1, 2, 3]);
 			expect(result).toEqual([1, 2, 3]);
 		});
 
-		it('returns template when input is undefined and template is array', () => {
+		it('returns template when input is undefined and template is object', () => {
 			const result = clean(undefined, { name: '', age: 0 });
 			expect(result).toEqual({ name: '', age: 0 });
 		});
@@ -794,7 +794,7 @@ describe('schema-clean', () => {
 			expect(clean(true, false)).toBe(true);
 		});
 
-		it('handles primitive template with mismatched input type', () => {
+		it('handles primitive template with a type mismatch', () => {
 			expect(clean('hello', 0)).toBe(0);
 			expect(clean(42, '')).toBe('');
 			expect(clean('yes', false)).toBe(false);
@@ -1010,7 +1010,7 @@ describe('schema-clean', () => {
 	});
 
 	describe('template aliasing', () => {
-		it('returns a clone (not a live ref) for missing nested object', () => {
+		it('returns a clone (not a live reference) for missing nested object', () => {
 			const template = { nested: { value: 0 } };
 
 			const resultCleanObject = cleanObject({}, template);
@@ -1028,7 +1028,7 @@ describe('schema-clean', () => {
 			expect(second).toEqual({ nested: { value: 0 } });
 		});
 
-		it('returns a clone (not a live ref) for missing nested array', () => {
+		it('returns a clone (not a live reference) for missing nested array', () => {
 			const template = { list: [{ id: 0 }] };
 
 			const resultCleanObject = cleanObject({}, template);
@@ -1102,8 +1102,8 @@ describe('schema-clean', () => {
 		});
 
 		it('returns function values as-is on the manual-clone path', () => {
-			// structuredClone throws on functions, so the manual path
-			// returns the same fn ref by design.
+			// `structuredClone` throws on functions. The manual path
+			// returns the same function reference by design.
 			const fn = () => 1;
 			const template: PlainObject = { fn };
 
@@ -1126,7 +1126,7 @@ describe('schema-clean', () => {
 			expect(resultClean).not.toHaveProperty('nested');
 		});
 
-		it('omits wrong-typed nested object', () => {
+		it('omits nested object with a type mismatch', () => {
 			const template = { nested: { value: 0 } };
 
 			const resultCleanObject = cleanObject({ nested: 42 }, template, { addDefaults: false });
@@ -1146,7 +1146,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual({});
 		});
 
-		it('omits wrong-typed nested array', () => {
+		it('omits nested array with a type mismatch', () => {
 			const template = { list: [0] };
 
 			const resultCleanObject = cleanObject({ list: 'x' }, template, { addDefaults: false });
@@ -1170,7 +1170,7 @@ describe('schema-clean', () => {
 			expect(resultArray.list).not.toBe(arrayTemplate.list);
 		});
 
-		it('omits keys at the level where deep input is missing or wrong-typed', () => {
+		it('omits keys where deep input is missing or has a type mismatch', () => {
 			const template = { a: { b: { c: 0 } } };
 
 			const missing = cleanObject({}, template, { addDefaults: false });
@@ -1239,7 +1239,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual([{ a: 1 }, { b: 1 }]);
 		});
 
-		it('does not let a non-matching object steal a match', () => {
+		it('does not use a non-matching object as a match', () => {
 			const value = [{ c: 9 }, { a: 1 }];
 			const template = [{ a: 0 }];
 
@@ -1277,7 +1277,7 @@ describe('schema-clean', () => {
 			expect(resultClean).toEqual([[9], [1]]);
 		});
 
-		it('appends only unused indices with removeExtra:false (no dupes)', () => {
+		it('appends only unused indices with removeExtra:false (no duplicates)', () => {
 			const resultCleanArray = cleanArray([1, 2, 3], [0], { removeExtra: false });
 			const resultClean = clean([1, 2, 3], [0], { removeExtra: false });
 
@@ -1321,13 +1321,13 @@ describe('schema-clean', () => {
 			expect(elapsed).toBeLessThan(2000);
 		});
 
-		it.todo('benchmarks clean vs zod/manual with tinybench (PLAN.md:227)');
+		it.todo('benchmarks clean vs zod/manual with tinybench');
 	});
 
 	describe('characterization (known-unfixed gaps)', () => {
-		// Documents CURRENT (buggy) behavior per PLAN.md §§1/5. Each `it.todo`
-		// is the desired fix; each passing `it` pins the bug so a future fix
-		// shows up as a failure to update.
+		// Pins current output for known gaps. Each `it.todo`
+		// is the desired fix. Each passing `it` pins the gap
+		// so a future fix shows up as a failure to update.
 
 		it('pins current behavior for circular input with a finite template', () => {
 			const input: PlainObject = {};

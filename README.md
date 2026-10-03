@@ -3,17 +3,17 @@
 [![GitHub Repo](https://img.shields.io/badge/GitHub-schema--clean-blue?&logo=github)](https://github.com/atif-c/schema-clean)
 [![npm Package](https://img.shields.io/npm/v/schema-clean?logo=npm)](https://npmjs.com/package/schema-clean)
 
-A small utility for recursively enforcing objects and arrays to conform against a schema. Removes unknown keys, adds missing defaults, and resets values whose types don't match the template.
+Cleans inputs against a template. Removes extra keys, adds missing keys from template defaults, and resets values with a type mismatch.
 
 ## Features
 
-- Cleans both objects and arrays at the top level
-- Removes keys not present in the template
-- Adds missing keys with template default values
-- Resets values whose `typeof` doesn't match the template
-- Recursively handles nested objects and arrays
-- Matches array items intelligently (objects by shared keys, primitives by index)
-- Configurable options: keep extra keys, skip defaults
+- Cleans objects, arrays, and primitives at the top level
+- Removes extra keys
+- Adds missing keys from template defaults
+- Resets values with a type mismatch to template defaults
+- Cleans nested objects and arrays recursively
+- Matches array items by shared keys for objects, by type for arrays, by index for primitives
+- Options to keep extra keys and skip template defaults
 - Zero dependencies, fully typed
 
 ## Installation
@@ -34,9 +34,9 @@ const template = { name: '', age: 0, active: false };
 
 const result = clean(input, template);
 // => { name: 'Atif', age: 0, active: false }
-// - 'age' reset to default 0 (string !== number)
-// - 'extra' removed (not in template)
-// - 'active' added with default false
+// - 'age' uses template default 0 (string !== number)
+// - 'extra' removed (extra key)
+// - 'active' added with template default false
 ```
 
 ### Cleaning a top-level array
@@ -77,7 +77,7 @@ const result = clean(
 
 ### Type mismatch handling
 
-When the input type doesn't match the template type (e.g. passing an array where the template is an object), the template default is returned:
+Returns the template default on a type mismatch. For example, an array input with an object template returns the object template default:
 
 ```typescript
 clean([1, 2, 3], { name: '', age: 0 });
@@ -89,16 +89,16 @@ clean({ name: 'Atif' }, [0, 0, 0]);
 
 ### Using options
 
-The third parameter controls cleaning behavior:
+The third parameter sets cleaning options:
 
 ```typescript
 import { clean, cleanArray, cleanObject } from 'schema-clean';
 import type { CleanOptions } from 'schema-clean';
 ```
 
-#### `removeExtra` - Keep extra keys/items
+#### `removeExtra` - Keep extra keys and items
 
-By default, keys/items in the input that aren't in the template are removed. Set `removeExtra: false` to keep them:
+Removes extra keys and items by default. Set `removeExtra: false` to keep them:
 
 ```typescript
 // Default behavior (removeExtra: true)
@@ -110,16 +110,16 @@ clean({ a: 1, b: 2 }, { a: 0 }, { removeExtra: false });
 // => { a: 1, b: 2 }
 ```
 
-#### `addDefaults` - Skip adding missing defaults
+#### `addDefaults` - Skip template defaults for missing keys and items
 
-By default, missing keys/items from the template are added with their default values. Set `addDefaults: false` to skip:
+Adds missing keys and items from template defaults by default. Set `addDefaults: false` to skip them:
 
 ```typescript
 // Default behavior (addDefaults: true)
 clean({ a: 1 }, { a: 0, b: 0 });
 // => { a: 1, b: 0 }
 
-// Don't add defaults
+// Do not add defaults
 clean({ a: 1 }, { a: 0, b: 0 }, { addDefaults: false });
 // => { a: 1 }
 ```
@@ -127,17 +127,17 @@ clean({ a: 1 }, { a: 0, b: 0 }, { addDefaults: false });
 #### Combined options
 
 ```typescript
-// Keep extra, don't add defaults
+// Keep extra keys, do not add defaults
 clean({ a: 1, b: 2, c: 3 }, { a: 0, d: 0 }, { removeExtra: false, addDefaults: false });
 // => { a: 1, b: 2, c: 3 }
 ```
 
 #### Array behavior
 
-For arrays, `removeExtra` controls whether extra items are kept, and `addDefaults` controls whether template items without matches get added:
+For arrays, `removeExtra: false` keeps extra items. `addDefaults: false` skips unmatched template items:
 
 ```typescript
-// Default: limit to template length, add defaults
+// Default: limit to template length, add template defaults
 cleanArray([1, 2, 3], [0]);
 // => [1]
 
@@ -145,7 +145,7 @@ cleanArray([1, 2, 3], [0]);
 cleanArray([1, 2, 3], [0], { removeExtra: false });
 // => [1, 2, 3]
 
-// Don't add defaults for missing items
+// Do not add defaults for missing items
 cleanArray([1], [0, 0], { addDefaults: false });
 // => [1]
 ```
@@ -154,49 +154,49 @@ cleanArray([1], [0, 0], { addDefaults: false });
 
 ### `clean<T>(input: unknown, template: T, options?: CleanOptions): T`
 
-The primary entry point. Accepts objects, arrays, or primitives as input and dispatches to the appropriate cleaning strategy based on the template type.
+The primary entry point. Cleans objects, arrays, or primitives. Selects the strategy from the template type.
 
 **Parameters:**
 
-- `input` — The value to clean (object, array, or primitive)
-- `template` — Template defining the expected shape and default values
-- `options` — Optional options to control cleaning behavior
+- `input` — The input to clean (object, array, or primitive)
+- `template` — Template defining the expected shape and template defaults
+- `options` — Optional cleaning options
 
-**Returns:** A new value conforming to the template structure.
+**Returns:** A new value that matches the template.
 
-### `cleanObject<T>(object: PlainObject, template: T, options?: CleanOptions): T`
+### `cleanObject<T extends PlainObject>(object: PlainObject, template: T, options?: CleanOptions): T`
 
-Cleans an object against a template. Exported for direct use when you know the input is an object.
+Cleans an object against a template. Use it when the input is an object.
 
 **Parameters:**
 
 - `object` — The object to clean
-- `template` — Template defining valid keys and default values
-- `options` — Optional options to control cleaning behavior
+- `template` — Template defining valid keys and template defaults
+- `options` — Optional cleaning options
 
-**Returns:** A new object matching the template structure.
+**Returns:** A new object that matches the template.
 
 ### `cleanArray<U>(inputArray: unknown[], templateArray: U[], options?: CleanOptions): U[]`
 
-Cleans an array against a template array.
+Cleans an input array against a template array.
 
 **Parameters:**
 
 - `inputArray` — The array to clean
-- `templateArray` — Template array defining the expected shape and defaults
-- `options` — Optional options to control cleaning behavior
+- `templateArray` — Template array defining the expected shape and template defaults
+- `options` — Optional cleaning options
 
-**Returns:** A new array conforming to the template.
+**Returns:** A new array that matches the template.
 
 ### `CleanOptions`
 
 ```typescript
 interface CleanOptions {
-	// Remove keys/items from input that are not in the template
+	// Remove extra keys and items
 	// Default: true
 	removeExtra?: boolean;
 
-	// Add missing keys/items from the template to the result
+	// Add missing keys and items from template defaults
 	// Default: true
 	addDefaults?: boolean;
 }
@@ -204,13 +204,13 @@ interface CleanOptions {
 
 ## Array matching strategy
 
-When cleaning arrays, items are matched based on type:
+When cleaning arrays, items match by type:
 
-- **Objects** — matched to template objects by shared keys (first input object sharing at least one key with the template object is used)
-- **Arrays** — matched by type (first unmatched input array pairs with the current template array)
-- **Primitives** — matched positionally by index, accepted only if `typeof` matches
+- **Objects** — match template objects by shared keys. Uses the first input object with at least one shared key.
+- **Arrays** — match template arrays by type. Uses the first unmatched input array.
+- **Primitives** — match by index. Accepts an item only on a `typeof` match.
 
-Unmatched template items use their template defaults (unless `addDefaults: false`).
+Unmatched template items use template defaults (unless `addDefaults: false`).
 
 Matching is O(I·K + T·K) total.
 
